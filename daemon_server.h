@@ -18,7 +18,7 @@
 
 //#include <wiringPi.h>
 
-void* led_thd_func(void* arg);
-void* handle_thd_func(void* arg);
+#include "queue.h"
+#include "thd_func.h"
 
 #endif // __DAEMON_SERVER_H__

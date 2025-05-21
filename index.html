@@ -1,27 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>LED Control</title>
-</head>
-<body>
-    <h1>LED Control</h1>
-
-    <button onclick="sendRequest('/led/on')">LED ON</button>
-    <button onclick="sendRequest('/led/off')">LED OFF</button>
-    
-    <br/><br/>
-    brightness: <input type="range" min="0" max="255" value="128" id="brightness" oninput="sendBrightness()"/>
-    <script>
-        function sendRequest(path) {
-            fetch(path)
-            .then(response => response.text())
-            .then(text => alert(text))
-            .catch(err => alert('Error: ' + err));
+    <meta charset="UTF-8">
+    <title>Device Control Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 20px;
+            text-align: center;
         }
 
-        function sendBrightness() {
-            let val = document.getElementById('brightness').value;
-            sendRequest('/led/brightness/' + val);
+        h1 {
+            color: #333;
+        }
+
+        .section {
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            width: 300px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        input[type="range"], input[type="number"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>IoT Device Control</h1>
+
+    <div class="section">
+        <h2>LED</h2>
+        <button onclick="sendCommand('/ledon')">LED ON</button>
+        <button onclick="sendCommand('/ledoff')">LED OFF</button>
+        <input type="range" min="0" max="100" id="ledBrightness">
+        <button onclick="setBrightness()">Set Brightness</button>
+    </div>
+
+    <div class="section">
+        <h2>Buzzer</h2>
+        <button onclick="sendCommand('/buzzon')">Buzzer ON</button>
+        <button onclick="sendCommand('/buzzoff')">Buzzer OFF</button>
+    </div>
+
+    <div class="section">
+        <h2>Light Sensor</h2>
+        <button onclick="sendCommand('/autoled')">Auto LED (by Sensor)</button>
+    </div>
+
+    <div class="section">
+        <h2>Countdown</h2>
+        <input type="number" id="countInput" min="1" max="9" placeholder="Seconds (1~9)">
+        <button onclick="startCountdown()">Start Countdown</button>
+    </div>
+
+    <script>
+        function sendCommand(path) {
+            fetch(path).then(response => {
+                if (!response.ok) alert("Error: " + response.status);
+            });
+        }
+
+        function setBrightness() {
+            const value = document.getElementById('ledBrightness').value;
+            fetch(`/ledbrightness?value=${value}`);
+        }
+
+        function startCountdown() {
+            const seconds = document.getElementById('countInput').value;
+            if (seconds >= 1 && seconds <= 9) {
+                fetch(`/countdown?sec=${seconds}`);
+            } else {
+                alert("Enter a number between 1 and 9.");
+            }
         }
     </script>
 </body>
