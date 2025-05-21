@@ -14,22 +14,22 @@ void* worker_thd_func(void* arg)
         switch (req->cmd)
         {
         case CMD_LED_ON:
-            printf("led_on\n");
+            cmd_led_on();
             break;
         case CMD_LED_OFF:
-            printf("led_off\n");
+            cmd_led_off();
+            break;
+        case CMD_LED_BRIGHTNESS:
+            cmd_led_set_brightness(req->arg);
             break;
         case CMD_BUZZER_ON:
-            printf("buzzor_on\n");
-            break;
-        case CMD_BUZZER_OFF:
-            printf("buzzor_off\n");
+            cmd_buzzer_on();
             break;
         case CMD_AUTO_LED:
             printf("led set\n");
             break;
         case CMD_COUNTDOWN:
-            printf("countdown\n");
+            cmd_countdown(req->arg);
             break;
         default:
             break;
@@ -39,7 +39,6 @@ void* worker_thd_func(void* arg)
     }
 }
 
-// 수정 필요요
 void* handle_thd_func(void* arg)
 {
     int sock = *((int*)arg);
@@ -106,36 +105,35 @@ void* handle_thd_func(void* arg)
 
     // CommandType으로 파싱
     CommandType cmd = CMD_UNKNOWN;
-    int brightness = -1;
-    int sec = -1;
+    int brightness = 0;
+    int sec = 0;
 
-    if (strcmp(path, "/led/on") == 0) {
+    if (strcmp(path, "/ledon") == 0) {
         cmd = CMD_LED_ON;
-    } else if (strcmp(path, "/led/off") == 0) {
+    } else if (strcmp(path, "/ledoff") == 0) {
         cmd = CMD_LED_OFF;
-    } else if (strncmp(path, "/led/brightness/", strlen("/led/brightness/")) == 0) {
+    } else if (strncmp(path, "/ledbrightness?value=", strlen("/ledbrightness?value=")) == 0) {
         cmd = CMD_LED_BRIGHTNESS;
-        brightness = atoi(path + strlen("/led/brightness/"));  // 추가로 저장 필요 시 여기서 값 전달
+        brightness = atoi(path + strlen("/ledbrightness?value=")); 
     } else if (strcmp(path, "/buzzon") == 0) {
         cmd = CMD_BUZZER_ON;
-    } else if (strcmp(path, "/buzzoff") == 0) {
-        cmd = CMD_BUZZER_OFF;
     } else if (strcmp(path, "/autoled") == 0) {
         cmd = CMD_AUTO_LED;
     } else if (strncmp(path, "/countdown?sec=", strlen("/countdown?sec=")) == 0) {
         cmd = CMD_COUNTDOWN;
-        sec = atoi(path + strlen("/countdown?sec=")); // 마찬가지로 값 넘기고 싶으면 구조체 확장
+        sec = atoi(path + strlen("/countdown?sec=")); 
     }
 
     // 큐에 명령 넣기
     if (cmd != CMD_UNKNOWN) {
+        int arg = 0;
         Request* req = (Request*)malloc(sizeof(Request));
-        if (brightness != -1)
-            req->arg = brightness;
-        else 
-            req->arg = sec;
+        if (brightness != 0 && sec == 0)
+            arg = brightness;
+        else if (sec != 0 && brightness == 0)
+            arg = sec;
 
-        enqueue(&cmd_queue, cmd);
+        enqueue(&cmd_queue, cmd, arg);
         fprintf(clnt_write, "HTTP/1.1 200 OK\r\n"
                             "Content-Type: text/plain\r\n\r\n"
                             "Command received\n");

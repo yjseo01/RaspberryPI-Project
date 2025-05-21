@@ -8,7 +8,7 @@ void init_queue(RequestQueue* q)
     pthread_cond_init(&q->cond, NULL);
 }
 
-void enqueue(RequestQueue* q, CommandType cmd)
+void enqueue(RequestQueue* q, CommandType cmd, int arg)
 {
     Request* new_req = (Request*)malloc(sizeof(Request));
     if (!new_req) {
@@ -16,6 +16,7 @@ void enqueue(RequestQueue* q, CommandType cmd)
         return;
     }
     new_req->cmd = cmd;
+    new_req->arg = arg;
     new_req->next = NULL;
 
     pthread_mutex_lock(&q->mutex);

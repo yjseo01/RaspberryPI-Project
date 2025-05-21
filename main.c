@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     pthread_t worker_thd;
 
     int serv_sock;
-    struct sockaddr_in serv_addr, clnt_addr;
+    struct sockaddr_in serv_addr;
 
     serv_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (serv_sock == -1)

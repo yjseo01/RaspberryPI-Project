@@ -34,7 +34,7 @@ typedef struct
 } RequestQueue;
 
 void init_queue(RequestQueue* q);
-void enqueue(RequestQueue* q, CommandType cmd);
+void enqueue(RequestQueue* q, CommandType cmd, int arg);
 Request* dequeue(RequestQueue* q);
 int is_empty(RequestQueue* q);
 

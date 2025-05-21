@@ -9,7 +9,7 @@ CROSS_LDFLAGS = -L/usr/aarch64-linux-gnu/lib -lwiringPi -lcrypt -lpthread -lm -W
 CFLAGS = -Wall -O2 
 LDFLAGS = -lpthread 
 
-SRCS = main.c thd_func.c queue.c
+SRCS = main.c thd_func.c ctrl_func.c queue.c
 OBJS = $(SRCS:.c=.o)
 
 .PHONY: all clean all_lib
@@ -27,7 +27,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 # 오브젝트 파일 컴파일
-%.o: %.c daemon_server.h thd_func.h queue.h 
+%.o: %.c daemon_server.h thd_func.h ctrl_func.h queue.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
