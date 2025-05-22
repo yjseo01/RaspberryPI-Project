@@ -58,7 +58,17 @@
         <div class="section">
             <h2>Buzzer</h2>
             <button onclick="sendCommand('/buzzon')">Play</button>
+            <button onclick="sendCommand('/buzzoff')">Stop</button>
+            <h3>play</h3>
+            <button onclick="playFreq(261)">도 (C)</button>
+            <button onclick="playFreq(294)">레 (D)</button>
+            <button onclick="playFreq(329)">미 (E)</button>
+            <button onclick="playFreq(349)">파 (F)</button>
+            <button onclick="playFreq(392)">솔 (G)</button>
+            <button onclick="playFreq(440)">라 (A)</button>
+            <button onclick="playFreq(493)">시 (B)</button>
         </div>
+        
     </div>
 
     <div class="row">
@@ -93,6 +103,12 @@
             } else {
                 alert("Enter a number between 1 and 9.");
             }
+        }
+
+        function playFreq(freq) {
+            fetch(`/play?freq=${freq}`)
+                .then(res => res.text())
+                .then(msg => console.log(msg));
         }
     </script>
 </body>

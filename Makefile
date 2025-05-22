@@ -1,13 +1,9 @@
 TARGET = daemon_server
-CC = gcc
 CROSS_CC = aarch64-linux-gnu-gcc
 
-# 크로스 컴파일 시 헤더, 라이브러리 경로
-CROSS_CFLAGS = -I/usr/aarch64-linux-gnu/include -I/usr/aarch64-linux-gnu/include/wiringPi -Ilibrasp
-CROSS_LDFLAGS = -L/usr/aarch64-linux-gnu/lib -lwiringPi -lcrypt -lpthread -lm -Wl,-rpath-link=/usr/aarch64-linux-gnu/lib
-
-CFLAGS = -Wall -O2 
-LDFLAGS = -lpthread 
+# 헤더 및 라이브러리 경로
+CROSS_CFLAGS = -I/usr/aarch64-linux-gnu/include -I/usr/aarch64-linux-gnu/include/wiringPi  -I/usr/aarch64-linux-gnu/include/wiringPiI2C -I/usr/aarch64-linux-gnu/include/softTone -I/usr/aarch64-linux-gnu/include/softPwm -Ilibrasp
+CROSS_LDFLAGS = -L/usr/aarch64-linux-gnu/lib -lwiringPi -lcrypt -lpthread -lm -Wl,-rpath-link=/usr/aarch64-linux-gnu/lib -L. -lrasp -Wl,-rpath=.
 
 SRCS = main.c thd_func.c ctrl_func.c queue.c
 OBJS = $(SRCS:.c=.o)
@@ -20,15 +16,14 @@ OBJS = $(SRCS:.c=.o)
 #librasp.so: librasp/librasp.c librasp/librasp.h
 #	$(CROSS_CC) $(CROSS_CFLAGS) -fPIC -shared -o librasp.so librasp/librasp.c $(CROSS_LDFLAGS)
 
-# 메인 타겟 빌드
-all: all_lib $(TARGET)
+# 전체 빌드
+#all: all_lib $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+$(TARGET): $(OBJS) librasp.so
+	$(CROSS_CC) $(CROSS_CFLAGS) -o $@ $^ $(CROSS_LDFLAGS)
 
-# 오브젝트 파일 컴파일
-%.o: %.c daemon_server.h thd_func.h ctrl_func.h queue.h
-	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.c daemon_server.h thd_func.h ctrl_func.h queue.h librasp/librasp.h
+	$(CROSS_CC) $(CROSS_CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(TARGET) $(OBJS) librasp.so

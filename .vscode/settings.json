@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "librasp.h": "c",
+        "ctrl_func.h": "c",
+        "thd_func.h": "c"
+    }
+}

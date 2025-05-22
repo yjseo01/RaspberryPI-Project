@@ -15,7 +15,8 @@ typedef enum {
     CMD_BUZZER_ON,
     CMD_BUZZER_OFF,
     CMD_AUTO_LED,
-    CMD_COUNTDOWN
+    CMD_COUNTDOWN,
+    CMD_PLAY_PITCH
 } CommandType;
 
 typedef struct Request

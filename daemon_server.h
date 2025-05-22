@@ -16,7 +16,8 @@
 #include <signal.h>
 #include <pthread.h>
 
-//#include <wiringPi.h>
+#include <wiringPi.h>
+#include <softPwm.h>
 
 #include "queue.h"
 #include "thd_func.h"

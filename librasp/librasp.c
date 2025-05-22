@@ -60,11 +60,16 @@ void musicPlay() {
     }
 }
 
-void beap()
+void beep()
 {
     softToneCreate(BUZZER_GPIO);
     softToneWrite(BUZZER_GPIO, 1000);
     delay(500);
+    softToneWrite(BUZZER_GPIO, 0);
+}
+
+void musicStop()
+{
     softToneWrite(BUZZER_GPIO, 0);
 }
 

@@ -10,6 +10,12 @@ int main(int argc, char** argv)
         printf("usage: %s <port> \n", argv[0]);
         exit(1);
     }
+
+    if (wiringPiSetupGpio() == -1)
+    {
+        perror("wiringPiSetupGpio0");
+        exit(1);
+    }
     pthread_t worker_thd;
 
     int serv_sock;
