@@ -11,11 +11,10 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    if (wiringPiSetupGpio() == -1)
-    {
-        perror("wiringPiSetupGpio0");
-        exit(1);
-    }
+    init_rasp();
+
+    printf("------SERVER START------\n");
+
     pthread_t worker_thd;
 
     int serv_sock;

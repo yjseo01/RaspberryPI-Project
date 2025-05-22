@@ -2,6 +2,7 @@
     "files.associations": {
         "librasp.h": "c",
         "ctrl_func.h": "c",
-        "thd_func.h": "c"
+        "thd_func.h": "c",
+        "daemon_server.h": "c"
     }
 }

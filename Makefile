@@ -17,7 +17,7 @@ OBJS = $(SRCS:.c=.o)
 #	$(CROSS_CC) $(CROSS_CFLAGS) -fPIC -shared -o librasp.so librasp/librasp.c $(CROSS_LDFLAGS)
 
 # 전체 빌드
-#all: all_lib $(TARGET)
+all: $(TARGET)
 
 $(TARGET): $(OBJS) librasp.so
 	$(CROSS_CC) $(CROSS_CFLAGS) -o $@ $^ $(CROSS_LDFLAGS)

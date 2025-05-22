@@ -21,5 +21,6 @@
 
 #include "queue.h"
 #include "thd_func.h"
+#include "librasp.h"
 
 #endif // __DAEMON_SERVER_H__

@@ -32,6 +32,10 @@ void cmd_led_set_brightness(int brightness)
     pthread_mutex_lock(&mtx);
     printf("[CMD] brightness: %d\n", brightness);
     set_led_brightness(brightness);
+    if (led_state == LED_OFF)
+    {
+        led_state = LED_ON;
+    }
     pthread_mutex_unlock(&mtx);
 }
 
