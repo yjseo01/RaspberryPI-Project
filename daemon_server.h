@@ -16,9 +16,10 @@
 #include <signal.h>
 #include <pthread.h>
 
-//#include <wiringPi.h>
+#include <wiringPi.h>
+#include <softPwm.h>
 
-void* led_thd_func(void* arg);
-void* handle_thd_func(void* arg);
+#include "queue.h"
+#include "thd_func.h"
 
 #endif // __DAEMON_SERVER_H__

@@ -11,13 +11,15 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    int serv_sock;
-    struct sockaddr_in serv_addr, clnt_addr;
+    if (wiringPiSetupGpio() == -1)
+    {
+        perror("wiringPiSetupGpio0");
+        exit(1);
+    }
+    pthread_t worker_thd;
 
-    pid_t led_thd;
-    pid_t buzzer_thd;
-    pid_t photoresistor_thd;
-    pid_t seven_segment_thd;
+    int serv_sock;
+    struct sockaddr_in serv_addr;
 
     serv_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (serv_sock == -1)
@@ -42,11 +44,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    if (pthread_create(&led_thd, NULL, led_thd_func, NULL) != 0)
-    {
-        perror("pthread_create");
-        exit(EXIT_FAILURE);
-    }
+    pthread_create(&worker_thd, NULL, worker_thd_func, NULL);
 
     while (1)
     {
@@ -71,7 +69,7 @@ int main(int argc, char** argv)
         pthread_detach(handle_thd);
     }
 
-    pthread_join(led_thd, NULL);
+    pthread_join(worker_thd, NULL);
 
     return 0;
 }
