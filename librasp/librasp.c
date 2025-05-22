@@ -29,12 +29,16 @@ void init_rasp()
 {
     if (wiringPiSetupGpio() == -1)
     {
-        perror("wiringPiSetupGpio0");
+        //perror("wiringPiSetupGpio0");
         exit(1);
     }
 
     pinMode(LED_PIN, OUTPUT);
-    softPwmCreate(LED_PIN, 0, 255);
+    if (softPwmCreate(LED_PIN, 0, 255) != 0) 
+    {
+        perror("softPwmCreate fail");
+        exit(1);
+    }
     softToneCreate(BUZZER_GPIO);
     // 핀 모드 설정
     for (int i = 0; i < 4; i++) {
@@ -57,6 +61,7 @@ void led_off()
 
 void set_led_brightness(int brightness)
 {
+    syslog(LOG_DEBUG, "set_led_brightness %d", brightness);
     if (brightness < 0)
         brightness = 0;
     if (brightness > 255)
@@ -72,7 +77,8 @@ void musicPlay() {
     
     for (i = 0; i < total; ++i) {
         softToneWrite(BUZZER_GPIO, (int)notes[i]);  // float → int 변환
-        printf("%d ", (int)notes[i]);
+        //printf("%d ", (int)notes[i]);
+
         delay(280);
     }
 }
@@ -94,7 +100,7 @@ void segment_display(int num)
 {
     int i;
     if (num < 0 || num > 9) {
-        printf("Invalid number for 7-segment display: %d\n", num);
+        //printf("Invalid number for 7-segment display: %d\n", num);
         return;
     }
 

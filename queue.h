@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 
 typedef enum {
     CMD_UNKNOWN,
@@ -31,7 +32,7 @@ typedef struct
     Request* head;
     Request* tail;
     pthread_mutex_t mutex;
-    pthread_mutex_t cond;
+    pthread_cond_t cond;
 } RequestQueue;
 
 void init_queue(RequestQueue* q);

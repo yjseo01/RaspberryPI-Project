@@ -15,12 +15,15 @@
 #include <syslog.h>
 #include <signal.h>
 #include <pthread.h>
+#include <errno.h>
 
 #include <wiringPi.h>
 #include <softPwm.h>
 
-#include "queue.h"
 #include "thd_func.h"
 #include "librasp.h"
+
+extern int a2dVal;
+extern pthread_mutex_t acdmtx;
 
 #endif // __DAEMON_SERVER_H__

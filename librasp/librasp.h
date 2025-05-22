@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <wiringPiI2C.h>
+
+#include <syslog.h>
 
 #define LED_PIN 18
 #define BUZZER_GPIO 25
