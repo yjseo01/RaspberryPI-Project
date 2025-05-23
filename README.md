@@ -18,7 +18,9 @@
 ---
 
 ## 빌드 및 실행 방법
-
+```bash
+$ git clone https://github.com/yjseo01/RaspberryPI-Project.git
+```
 ### 서버
 #### 1. 빌드 (우분투에서 크로스 컴파일)
 ```bash
