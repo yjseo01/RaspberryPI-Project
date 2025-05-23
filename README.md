@@ -95,10 +95,6 @@ $ ./client
 │   └── librasp.h
 ├── librasp.so
 ├── main.c
-├── server.crt
-├── server.key
-├── ssl_func.c
-├── ssl_func.h
 ├── thd_func.c
 └── thd_func.h
 ```
