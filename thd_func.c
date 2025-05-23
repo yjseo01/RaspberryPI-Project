@@ -88,7 +88,6 @@ void* handle_thd_func(void* arg)
         cmd_led_on();
     } else if (strcmp(path, "/ledoff") == 0) {
         cmd_led_off();
-
     } else if (strncmp(path, "/ledbrightness?value=", strlen("/ledbrightness?value=")) == 0) {
         brightness = atoi(path + strlen("/ledbrightness?value="));
         cmd_led_set_brightness(brightness);
@@ -126,6 +125,15 @@ void* handle_thd_func(void* arg)
             syslog(LOG_INFO, "[ADC] dark(a2dVal = %d)", a2dVal);
             cmd_led_on();
         }
+
+        fprintf(clnt_write,
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n\r\n"
+        "Auto LED Control\n"
+        "a2dVal = %d\n",
+        a2dVal);
+        fflush(clnt_write); 
+
         pthread_mutex_unlock(&acdmtx2);
 
     } else if (strncmp(path, "/countdown?sec=", strlen("/countdown?sec=")) == 0) {
@@ -153,9 +161,12 @@ void* handle_thd_func(void* arg)
         pthread_exit(NULL);
     }
 
-    fprintf(clnt_write, "HTTP/1.1 200 OK\r\n"
+    if (strcmp(path, "/autoled") != 0)
+    {
+        fprintf(clnt_write, "HTTP/1.1 200 OK\r\n"
                             "Content-Type: text/plain\r\n\r\n"
                             "Command received\n");
+    }
 
     fclose(clnt_read);
     fclose(clnt_write);
@@ -198,7 +209,7 @@ void* handle_buzzer_on(void* arg)
 void* handle_countdown(void* arg)
 {
     syslog(LOG_DEBUG, "[DEBUG] countdown");
-    int sec = (int)(intptr_t)arg;;
+    int sec = (int)(intptr_t)arg;
     cmd_countdown(sec);
     return NULL;
 }

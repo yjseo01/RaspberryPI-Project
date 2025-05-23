@@ -11,7 +11,12 @@
 #include <syslog.h>
 #include <wiringPiI2C.h>
 
+#include <wiringPi.h>
+#include <softTone.h>
+#include <softPwm.h>
+
 #include "ctrl_func.h"
+#include "handle_lib.h"
 #include "librasp.h"
 
 #define THRESHOLD 180

@@ -28,9 +28,6 @@ int main()
     }
     set_led_brightness(0);
 
-    printf("음악 재생 테스트\n");
-    musicPlay();
-
     printf("비프음 테스트\n");
     beap();
 

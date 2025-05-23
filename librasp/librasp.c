@@ -27,16 +27,19 @@ int number[10][4] = {
 
 void init_rasp()
 {
+    syslog(LOG_DEBUG, "init_rasp");
     if (wiringPiSetupGpio() == -1)
     {
         //perror("wiringPiSetupGpio0");
+        syslog(LOG_ERR, "wiringPiSetupGpio0");
         exit(1);
     }
 
     pinMode(LED_PIN, OUTPUT);
     if (softPwmCreate(LED_PIN, 0, 255) != 0) 
     {
-        perror("softPwmCreate fail");
+        //perror("softPwmCreate fail");
+        syslog(LOG_ERR, "softPwmCreate");
         exit(1);
     }
     softToneCreate(BUZZER_GPIO);
@@ -49,18 +52,21 @@ void init_rasp()
 // led
 void led_on()
 {
-    digitalWrite(LED_PIN, HIGH);
+    softPwmCreate(LED_PIN, 0, 255);
+    //digitalWrite(LED_PIN, HIGH);
     softPwmWrite(LED_PIN, 255);
 }
 
 void led_off()
 {
-    digitalWrite(LED_PIN, LOW);
+    softPwmCreate(LED_PIN, 0, 255);
+    //digitalWrite(LED_PIN, LOW);
     softPwmWrite(LED_PIN, 0);
 }
 
 void set_led_brightness(int brightness)
 {
+    softPwmCreate(LED_PIN, 0, 255);
     syslog(LOG_DEBUG, "set_led_brightness %d", brightness);
     if (brightness < 0)
         brightness = 0;
@@ -71,6 +77,7 @@ void set_led_brightness(int brightness)
 }
 
 // 
+/*
 void musicPlay() {
     int i;
     int total = sizeof(notes) / sizeof(double);
@@ -82,6 +89,7 @@ void musicPlay() {
         delay(280);
     }
 }
+*/
 
 void beep()
 {
@@ -90,10 +98,12 @@ void beep()
     softToneWrite(BUZZER_GPIO, 0);
 }
 
+/*
 void musicStop()
 {
     softToneWrite(BUZZER_GPIO, 0);
 }
+*/
 
 //
 void segment_display(int num)

@@ -16,12 +16,17 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <dlfcn.h>
 
 #include <wiringPi.h>
+#include <softTone.h>
 #include <softPwm.h>
 
+
 #include "thd_func.h"
+#include "handle_lib.h"
 #include "librasp.h"
+//#include "librasp.h"
 
 extern int a2dVal;
 extern pthread_mutex_t acdmtx;

@@ -22,8 +22,8 @@ void set_led_brightness(int level);
 
 // Buzzor
 void beep();
-void musicPlay();
-void musicStop();
+//void musicPlay();
+//void musicStop();
 
 // 7 segment
 void segment_display(int num);
