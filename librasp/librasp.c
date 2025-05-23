@@ -53,14 +53,14 @@ void init_rasp()
 void led_on()
 {
     softPwmCreate(LED_PIN, 0, 255);
-    //digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, HIGH);
     softPwmWrite(LED_PIN, 255);
 }
 
 void led_off()
 {
     softPwmCreate(LED_PIN, 0, 255);
-    //digitalWrite(LED_PIN, LOW);
+    digitalWrite(LED_PIN, LOW);
     softPwmWrite(LED_PIN, 0);
 }
 
