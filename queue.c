@@ -5,7 +5,7 @@ void init_queue(RequestQueue* q)
     q->head = NULL;
     q->tail = NULL;
     pthread_mutex_init(&q->mutex, NULL);
-    pthread_cond_init(&q->cond, NULL);
+    //pthread_cond_init(&q->cond, NULL);
 }
 
 void enqueue(RequestQueue* q, CommandType cmd, int arg)
@@ -19,6 +19,8 @@ void enqueue(RequestQueue* q, CommandType cmd, int arg)
     new_req->arg = arg;
     new_req->next = NULL;
 
+    syslog(LOG_DEBUG, "[DEBUG] enqueue command: %d", new_req->cmd);
+
     pthread_mutex_lock(&q->mutex);
 
     if (q->tail) {
@@ -28,7 +30,7 @@ void enqueue(RequestQueue* q, CommandType cmd, int arg)
     }
     q->tail = new_req;
 
-    pthread_cond_signal(&q->cond);
+    //pthread_cond_signal(&q->cond);
     pthread_mutex_unlock(&q->mutex);
 }
 
@@ -49,17 +51,16 @@ Request* dequeue(RequestQueue* q)
     //CommandType cmd = req->cmd;
     //free(req);
 
+    //pthread_cond_signal(&q->cond);
     pthread_mutex_unlock(&q->mutex);
     return req;
 }
 
-int is_empty(RequestQueue* q)
+int is_empty(RequestQueue* q) 
 {
-    int empty;
-
     pthread_mutex_lock(&q->mutex);
-    empty = (q->head == NULL);
+    int result = (q->head == q->tail);
     pthread_mutex_unlock(&q->mutex);
 
-    return empty;
+    return result;
 }

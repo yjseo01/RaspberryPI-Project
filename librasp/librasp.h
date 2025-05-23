@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <wiringPiI2C.h>
+
+#include <syslog.h>
 
 #define LED_PIN 18
 #define BUZZER_GPIO 25
@@ -19,8 +22,8 @@ void set_led_brightness(int level);
 
 // Buzzor
 void beep();
-void musicPlay();
-void musicStop();
+//void musicPlay();
+//void musicStop();
 
 // 7 segment
 void segment_display(int num);

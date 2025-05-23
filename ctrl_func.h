@@ -10,12 +10,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
+
+#include <wiringPi.h>
+#include <softTone.h>
+#include <softPwm.h>
+
+#include "handle_lib.h"
 
 void cmd_led_on();
 void cmd_led_off();
 void cmd_led_set_brightness(int);
-void cmd_buzzer_on();
-void cmd_buzzer_off();
+int cmd_get_brightness(int);
 void cmd_countdown(int);
 
 extern int led_state;

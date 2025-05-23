@@ -2,109 +2,30 @@
 
 pthread_t g_buzzer_tid;
 atomic_bool g_buzzer_running = false;
-RequestQueue cmd_queue;
-
-void* worker_thd_func(void* arg)
-{
-    printf("[WORKER THREAD]\n");
-    // adc 실행
-    int fd;
-    int a2dChannel = 0;
-    int a2dVal;
-    int threshold = 180;
-    int cnt = 0;
-
-    printf("[ADC/DAC(YL-40) Module start........]\n");
-    if ((fd = wiringPiI2CSetupInterface("/dev/i2c-1", 0x48)) < 0) {
-        printf("wiringPiI2CSetupInterface failed\n");
-        pthread_exit(NULL);
-    }
-
-    while (1)
-    {
-        wiringPiI2CWrite(fd, 0x00 | a2dChannel);  // AIN0 선택
-        a2dVal = wiringPiI2CRead(fd);             // 실제값
-
-        if (is_empty(&cmd_queue))
-            continue;
-
-        Request* req = dequeue(&cmd_queue);
-        pthread_t tid;
-
-        //
-        switch (req->cmd)
-        {
-        case CMD_LED_ON:
-            cmd_led_on();
-            break;
-        case CMD_LED_OFF:
-            cmd_led_off();
-            break;
-        case CMD_LED_BRIGHTNESS:
-            cmd_led_set_brightness(req->arg);
-            break;
-        case CMD_BUZZER_ON:
-            // cmd_buzzer_on();
-            if (!atomic_load(&g_buzzer_running)) 
-            {
-                pthread_create(&g_buzzer_tid, NULL, handle_buzzer_on, NULL);
-                pthread_detach(g_buzzer_tid);
-            }           
-            break;
-        case CMD_BUZZER_OFF:
-            // buzzer thread에 signal 보내기
-            printf("[CMD] buzzer off\n");
-            if (atomic_load(&g_buzzer_running)) 
-            {
-                pthread_cancel(g_buzzer_tid);
-            }
-            break;
-        case CMD_AUTO_LED:
-            printf("[CMD] led auto set\n");
-            if (a2dVal > threshold) 
-            {
-                printf("[ADC]: bright(a2dVal = %d)\n", a2dVal);
-                cmd_led_off();
-            } 
-            else 
-            {
-                printf("[ADC]: dark(a2dVal = %d)\n", a2dVal);
-                cmd_led_on();
-            }
-
-            break;
-        case CMD_COUNTDOWN:
-            // cmd_countdown(req->arg);
-            pthread_create(&tid, NULL, handle_countdown, (void*)(intptr_t)req->arg);
-            pthread_join(tid, NULL);
-            break;
-        case CMD_PLAY_PITCH:
-            printf("[CMD] play pitch\n");
-            softToneCreate(BUZZER_GPIO);
-            softToneWrite(BUZZER_GPIO, req->arg);
-            delay(500);
-            softToneWrite(BUZZER_GPIO, 0);
-        default:
-            break;
-        }
-        
-        free(req);
-    }
-}
+pthread_mutex_t acdmtx2;
 
 void* handle_thd_func(void* arg)
 {
+    thd_arg_t* t_arg = (thd_arg_t*)arg;
+    int clnt_sock = t_arg->clnt_sock;
+    int acd_fd = t_arg->acd_fd;
+    
+    pthread_mutex_init(&acdmtx2, NULL);
+    syslog(LOG_DEBUG, "handle_thd");
+
     int sock = *((int*)arg);
     FILE* clnt_read, *clnt_write;
     char reg_line[BUFSIZ], reg_buf[BUFSIZ];
     char method[BUFSIZ], path[BUFSIZ];
     char* ret;
+    pthread_t tid;
 
     clnt_read = fdopen(sock, "r");
     clnt_write = fdopen(dup(sock), "w");
 
     if (!clnt_read || !clnt_write) {
-        perror("fdopen");
+        //perror("fdopen");
+        syslog(LOG_ERR, "fdopen");
         close(sock);
         pthread_exit(NULL);
     }
@@ -128,10 +49,12 @@ void* handle_thd_func(void* arg)
         FILE* fp = fopen("./index.html", "r");
 
         if (fp == NULL) {
+            syslog(LOG_DEBUG, "[DEBUG] 404 not found");
             fprintf(clnt_write, "HTTP/1.1 404 Not Found\r\n"
                                 "Content-Type: text/plain\r\n\r\n"
                                 "index.html not found\n");
         } else {
+            syslog(LOG_DEBUG, "[DEBUG] 200 ok");
             fprintf(clnt_write, "HTTP/1.1 200 OK\r\n"
                                 "Content-Type: text/html\r\n\r\n");
             char buf[1024];
@@ -148,6 +71,7 @@ void* handle_thd_func(void* arg)
     }
 
     if (strcmp(method, "GET") != 0) {
+        syslog(LOG_DEBUG, "[DEBUG] 405 method not allowed");
         fprintf(clnt_write, "HTTP/1.1 405 Method Not Allowed\r\n"
                             "Content-Type: text/plain\r\n\r\n"
                             "Only GET supported\n");
@@ -156,62 +80,105 @@ void* handle_thd_func(void* arg)
         pthread_exit(NULL);
     }
 
-    // CommandType으로 파싱
-    CommandType cmd = CMD_UNKNOWN;
     int brightness = 0;
     int sec = 0;
     int note = 0;
 
     if (strcmp(path, "/ledon") == 0) {
-        cmd = CMD_LED_ON;
+        cmd_led_on();
     } else if (strcmp(path, "/ledoff") == 0) {
-        cmd = CMD_LED_OFF;
+        cmd_led_off();
     } else if (strncmp(path, "/ledbrightness?value=", strlen("/ledbrightness?value=")) == 0) {
-        cmd = CMD_LED_BRIGHTNESS;
-        brightness = atoi(path + strlen("/ledbrightness?value=")); 
+        brightness = atoi(path + strlen("/ledbrightness?value="));
+        cmd_led_set_brightness(brightness);
+        if (led_state == LED_OFF)
+        {
+            led_state = LED_ON;
+        }
+
     } else if (strcmp(path, "/buzzon") == 0) {
-        cmd = CMD_BUZZER_ON;
+        if (!atomic_load(&g_buzzer_running)) 
+        {
+            pthread_create(&g_buzzer_tid, NULL, handle_buzzer_on, NULL);
+            pthread_detach(g_buzzer_tid);
+        }           
     } else if (strcmp(path, "/buzzoff") == 0) {
-        cmd = CMD_BUZZER_OFF;
+        syslog(LOG_INFO, "[CMD] buzzer off");
+        if (atomic_load(&g_buzzer_running)) 
+        {
+            pthread_cancel(g_buzzer_tid);
+        }
     } else if (strcmp(path, "/autoled") == 0) {
-        cmd = CMD_AUTO_LED;
+        pthread_mutex_lock(&acdmtx2);
+        syslog(LOG_INFO, "[CMD] led auto set");
+
+        int a2dVal = cmd_get_brightness(acd_fd);
+        if (a2dVal > THRESHOLD)
+        {
+            //printf("[ADC] bright(a2dVal = %d)\n", a2dVal);
+            syslog(LOG_INFO, "[ADC] bright(a2dVal = %d)", a2dVal);
+            cmd_led_off();
+        }
+        else
+        {
+            //printf("[ADC] dark(a2dVal = %d)\n", a2dVal);
+            syslog(LOG_INFO, "[ADC] dark(a2dVal = %d)", a2dVal);
+            cmd_led_on();
+        }
+
+        fprintf(clnt_write,
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n\r\n"
+        "Auto LED Control\n"
+        "a2dVal = %d\n",
+        a2dVal);
+        fflush(clnt_write); 
+
+        pthread_mutex_unlock(&acdmtx2);
+
     } else if (strncmp(path, "/countdown?sec=", strlen("/countdown?sec=")) == 0) {
-        cmd = CMD_COUNTDOWN;
         sec = atoi(path + strlen("/countdown?sec=")); 
+        pthread_create(&tid, NULL, handle_countdown, (void*)(intptr_t)sec);
+        pthread_detach(tid);
     } else if (strncmp(path, "/play?freq=", strlen("/play?freq=")) == 0) {
-        cmd = CMD_PLAY_PITCH;
         note = atoi(path + strlen("/play?freq=")); 
+        syslog(LOG_INFO, "[CMD] play pitch");
+        softToneCreate(BUZZER_GPIO);
+        softToneWrite(BUZZER_GPIO, note);
+        delay(500);
+        softToneWrite(BUZZER_GPIO, 0);
     }
-
-    // 큐에 명령 넣기
-    if (cmd != CMD_UNKNOWN) {
-        int arg = 0;
-        Request* req = (Request*)malloc(sizeof(Request));
-        if (brightness != 0 && sec == 0 && note == 0)
-            arg = brightness;
-        else if (sec != 0 && brightness == 0 && note == 0)
-            arg = sec;
-        else if (note != 0 && brightness == 0 && sec == 0)
-            arg = note;
-
-        enqueue(&cmd_queue, cmd, arg);
-        fprintf(clnt_write, "HTTP/1.1 200 OK\r\n"
-                            "Content-Type: text/plain\r\n\r\n"
-                            "Command received\n");
-    } else {
+    else
+    {
+        syslog(LOG_DEBUG, "[DEBUG] 404 not found");
         fprintf(clnt_write, "HTTP/1.1 404 Not Found\r\n"
                             "Content-Type: text/plain\r\n\r\n"
                             "Unknown command\n");
+
+        fclose(clnt_read);
+        fclose(clnt_write);
+        pthread_mutex_destroy(&acdmtx2);
+        pthread_exit(NULL);
+    }
+
+    if (strcmp(path, "/autoled") != 0)
+    {
+        fprintf(clnt_write, "HTTP/1.1 200 OK\r\n"
+                            "Content-Type: text/plain\r\n\r\n"
+                            "Command received\n");
     }
 
     fclose(clnt_read);
     fclose(clnt_write);
+    free(arg);
+    pthread_mutex_destroy(&acdmtx2);
     pthread_exit(NULL);
 }
 
 // thread handler
 void* handle_buzzer_on(void* arg)
 {
+    syslog(LOG_DEBUG, "[DEBUG] buzzer on");
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
     pthread_cleanup_push(cleanup_buzzer, NULL);
@@ -230,7 +197,8 @@ void* handle_buzzer_on(void* arg)
     softToneCreate(BUZZER_GPIO);  // 부저용 GPIO 설정
     for (i = 0; i < total; ++i) {
         softToneWrite(BUZZER_GPIO, (int)notes[i]);  // float → int 변환
-        printf("%d ", (int)notes[i]);
+        //printf("%d ", (int)notes[i]);
+        syslog(LOG_INFO, "%d ", (int)notes[i]);
         delay(280);
     }
 
@@ -240,8 +208,8 @@ void* handle_buzzer_on(void* arg)
 
 void* handle_countdown(void* arg)
 {
+    syslog(LOG_DEBUG, "[DEBUG] countdown");
     int sec = (int)(intptr_t)arg;
-    printf("[DEBUG] handle_countdown: %d\n", sec);
     cmd_countdown(sec);
     return NULL;
 }

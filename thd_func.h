@@ -8,14 +8,19 @@
 #include <unistd.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <syslog.h>
 #include <wiringPiI2C.h>
 
+#include <wiringPi.h>
+#include <softTone.h>
+#include <softPwm.h>
 
-#include "queue.h"
 #include "ctrl_func.h"
+#include "handle_lib.h"
 #include "librasp.h"
 
-void* worker_thd_func(void*);
+#define THRESHOLD 180
+
 void* handle_thd_func(void*);
 
 void* handle_buzzer_on(void*);
@@ -25,6 +30,13 @@ void cleanup_buzzer(void*);
 
 extern pthread_t g_buzzer_tid;
 extern atomic_bool g_buzzer_running;
-extern RequestQueue cmd_queue;
+extern int a2dVal;
+extern pthread_mutex_t acdmtx2;
+
+typedef struct 
+{
+    int clnt_sock;
+    int acd_fd;
+} thd_arg_t;
 
 #endif // __THD_FUNC_H__
